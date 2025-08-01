@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 module t07_SPI_ESP32_tb;    
     // Testbench signals
-    logic [7:0] ESP_in;
+    logic [3:0] ESP_in;
     logic clk, nrst;
     logic [5:0] SPI_Address; // Address for the external register
     logic [31:0] dataForExtReg; // Data to write to the external register
@@ -26,19 +26,31 @@ module t07_SPI_ESP32_tb;
     end
 
     task ESP_in_task; begin
-        ESP_in = 8'hAA; // Default value
+        ESP_in = 4'hA; // Default value
         #10;
-        ESP_in = 8'hBB; // Example data
+        ESP_in = 4'hB; // Example data
         #10;
-        ESP_in = 8'hCC; // Another example data
+        ESP_in = 4'hC; // Another example data
         #10;
-        ESP_in = 8'hDD; // Reset value
+        ESP_in = 4'hD; // Reset value
         #10;
-        ESP_in = 8'hEE;
+        ESP_in = 4'hE;
         #10;
-        ESP_in = 8'hFF; // Final example data
+        ESP_in = 4'hF; // Final example data
         #10; // Wait for a clock cycle
-        ESP_in = 8'h00; // Reset value
+        ESP_in = 4'hA; // Default value
+        #10;
+        ESP_in = 4'hB; // Example data
+        #10;
+        ESP_in = 4'hC; // Another example data
+        #10;
+        ESP_in = 4'hD; // Reset value
+        #10;
+        ESP_in = 4'hE;
+        #10;
+        ESP_in = 4'hF; // Final example data
+        #10; // Wait for a clock cycle
+        ESP_in = 4'h0; // Reset value
         #10; // Wait for a clock cycle
     end
     endtask
@@ -49,7 +61,7 @@ module t07_SPI_ESP32_tb;
 
         // Initialize inputs
         nrst = 1'b0; // Reset the system
-        ESP_in = 8'h00; // Initial value for ESP input
+        ESP_in = 4'h0; // Initial value for ESP input
         #10; // Wait for a few time units
         nrst = 1'b1; // Release reset
         #5;

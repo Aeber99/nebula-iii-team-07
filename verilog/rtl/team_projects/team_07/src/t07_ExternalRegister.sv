@@ -24,24 +24,22 @@ module t07_ExternalRegister (
     //logic next_ack_REG;  // Next acknowledge signal to the memory handler
     logic [31:0] next_read_data; // Next write data to the register
     logic n_ChipSelect;
+
     // edge detector
-    logic ri_first, ri_f_n, ri_second, ri_s_n;
+    logic ri_first, ri_f_n;
     always_ff @(negedge nrst, posedge clk) begin
         if (!nrst) begin 
             ri_first <= 0;
-            ri_second <= 0;
         end else begin
             ri_first <= ri_f_n;
-            ri_second <= ri_s_n;
         end
     end
 
     always_comb begin
         ri_f_n = ri;
-        ri_s_n = ri_first;
     end
 
-    assign ack_REG = (ri_first && !ri_second);
+    assign ack_REG = (!ri_first && ri);
     
     always_ff @(negedge nrst, posedge clk) begin
         if (!nrst) begin

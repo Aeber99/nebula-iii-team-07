@@ -25,6 +25,8 @@
 /verilog/dv/*/module_tests/sim_build
 /verilog/dv/*/module_tests/DVEfiles
 /verilog/dv/*/module_tests/.restartSimSession.tcl.old
+/verilog/dv/*/module_tests/.nfs*
+/verilog/dv/*/module_tests/build
 /verilog/dv/*/*.log
 /verilog/dv/*/.nfs*
 /verilog/dv/team_*/team*.h

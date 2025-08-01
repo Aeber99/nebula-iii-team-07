@@ -19,7 +19,23 @@ sim_%_src: %.vvp
 	else \
 		gtkwave $*.vcd; \
 	fi
-	rm -rf $*.vvp
+
+.PHONY: sim_%_src_verilator
+sim_%_src_verilator:
+	mkdir -p build && rm -rf build/*;
+	verilator -binary -j 0 -Wno-TIMESCALEMOD --Mdir build --trace \
+		-y ../../../rtl/team_projects/team_07 \
+		-y ../../../rtl/team_projects/team_07/src \
+		-y ../../../rtl/wishbone_manager \
+		-y ../../../rtl/wishbone_interconnect \
+		-y ../../../rtl/sram \
+		$*_tb.sv;
+	build/V$*_tb
+	if [ -f $*.gtkw ]; then \
+		gtkwave $*.gtkw; \
+	else \
+		gtkwave $*.vcd; \
+	fi
 
 
 # Create file that lists the RTL code and testbench files to compile

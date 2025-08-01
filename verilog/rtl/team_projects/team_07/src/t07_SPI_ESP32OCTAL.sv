@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
-module t07_SPI_ESP32 (
-    input logic [3:0] ESP_in, 
+module t07_SPI_ESP32OCTAL (
+    input logic [7:0] ESP_in, 
     input logic clk, nrst,
     input logic ChipSelectIn,
     output logic [4:0] SPI_Address, // Address for the external register],
@@ -45,12 +45,12 @@ always_comb begin
         n_MOSI_shiftReg = '0;
         f_MOSI_shiftReg = '0;
     end else if (bit_count == 0) begin
-        n_MOSI_shiftReg = {MOSI_shiftReg[27:0], ESP_in}; // Shift in the incoming data
+        n_MOSI_shiftReg = {MOSI_shiftReg[23:0], ESP_in}; // Shift in the incoming data
         n_bit_count = 1; // Start counting bits from 1
         n_address = address;
         //f_MOSI_shiftReg = '0; // No valid data to write to the external register yet
-    end else if (bit_count < 8) begin // If bit count is less than 4
-        n_MOSI_shiftReg = {MOSI_shiftReg[27:0], ESP_in}; // Shift in the incoming data
+    end else if (bit_count < 4) begin // If bit count is less than 4
+        n_MOSI_shiftReg = {MOSI_shiftReg[23:0], ESP_in}; // Shift in the incoming data
         n_bit_count = bit_count + 4'b1; // Increment the bit count
         n_address = address; // Keep the address unchanged
         //f_MOSI_shiftReg = '0; // No valid data to write to the external register yet
@@ -61,11 +61,11 @@ always_comb begin
             n_address = 5'd1; // Reset address to 1 if it exceeds 31        
         end       
        // f_MOSI_shiftReg = MOSI_shiftReg; // Keep the shift register unchanged
-        n_MOSI_shiftReg = {MOSI_shiftReg[27:0], ESP_in}; // Shift in the incoming data
+        n_MOSI_shiftReg = {MOSI_shiftReg[23:0], ESP_in}; // Shift in the incoming data
         n_bit_count = 4'b1; // Reset the bit count to 1 for the next byte
     end
 
-    if (bit_count != 8 && bit_count != 1) begin
+    if (bit_count != 4 && bit_count != 1) begin
         SPI_Address = '0;
         f_MOSI_shiftReg = '0; // No valid data to write to the external register yet
     end else if (bit_count == 1) begin

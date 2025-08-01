@@ -56,10 +56,10 @@ always_comb begin
         end
 
         7'b 0000011: begin /*(I-Type)*/
-            ALUOp = 4'd10; //ALU default
+            ALUOp = 4'd00; //add rs1 + imm
             memSrc = 0;
             invalid_Op = 0;
-            regWriteSrc = 3'b100; //from immediate
+            regWriteSrc = 3'b001; //from internal mem
             ALUSrc = 1;
             regWrite = 1;
             branch = 0;
@@ -165,11 +165,11 @@ always_comb begin
             FPURnd = '0;
         end
         7'b0010111: begin /*(U-Type, auipc)*/
-            ALUOp = 4'd10; //ALU default
+            ALUOp = 4'd00; //ALU addr + imm
             memSrc = 0;
             invalid_Op = 0;
             regWriteSrc = 3'b010; //from ALU
-            ALUSrc = 0;
+            ALUSrc = 1;
             regWrite = 1;
             branch = 0;
             memWrite = 0;
@@ -201,11 +201,11 @@ always_comb begin
             FPURnd = '0;
         end
         7'b1100111: begin /*(J-type, jalr)*/
-            ALUOp = 4'd10; //ALU default
+            ALUOp = 4'd0; //ALU add rs1 + imm
             memSrc = 0;
             invalid_Op = 0;
             regWriteSrc = 3'b000; //from PC
-            ALUSrc = 0;
+            ALUSrc = 1;
             regWrite = 1;
             branch = 0;
             memWrite = 0;
