@@ -24,6 +24,6 @@
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_FPU_inttofloat.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_fetch.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_top.sv
--v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_spi_tft.sv
-
+-v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_quadSPI.sv
+-v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_spitft.sv
 
