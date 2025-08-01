@@ -27,7 +27,7 @@ module t07_memoryHandler (
     output logic [1:0] rwi,          // read - 01, write - 10, idle - 00, fetch -11 
     output state_t0 state,
     output logic addrControl, // control for address mux, 0 when fetch, 1 when l/s
-    output logic busy_o_edge,
+    output logic busy_o_edge
 
 );
     //edge detector
