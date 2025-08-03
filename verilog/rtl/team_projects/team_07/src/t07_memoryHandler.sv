@@ -4,7 +4,9 @@
         F_WAIT = 1,
         DATA = 2,
         D_WAIT = 3,
-        DELAY = 4
+        DELAY = 4,
+        F_DELAY = 5,
+        LOAD_DELAY = 6
     } state_t0;
 
 
@@ -81,7 +83,7 @@ module t07_memoryHandler (
                     rwi = 'b11; 
                     freeze_o = 1;
                     if(busy_o_edge == 'b1) begin 
-                        state_n = DATA; 
+                        state_n = F_DELAY; 
                     end else begin
                         state_n = F_WAIT; 
                     end 
@@ -179,16 +181,16 @@ module t07_memoryHandler (
                     
                     if(busy_o_edge & load_ct == '0) begin //check that load_ct is correct and not load_count_n
                         load_ct_n = load_ct;
-                        state_n = FETCH; 
+                        state_n = DELAY; 
                         rwi = 'b01;
                     end else if (busy_o_edge & load_ct == 'd1) begin 
-                        state_n = DATA; 
+                        state_n = LOAD_DELAY; 
                         rwi = 'b10;
                     end else if (busy_o_edge & load_ct == 'd2) begin
                         state_n = DELAY;
                         rwi = 'b10;
                     end else if (busy_o_edge) begin
-                        state_n = FETCH;
+                        state_n = DELAY;
                         rwi = 'b10; //check
                     end 
 
@@ -196,10 +198,18 @@ module t07_memoryHandler (
                     addrMMIO_o = ALU_address; 
                     dataMMIO_o = regData_i;
                 end
-            DELAY: //state 4, wait for load instruction
-                begin
-                    state_n = FETCH;
-                end
+            DELAY: begin
+                rwi = 'b00;
+                state_n = FETCH;
+            end
+            F_DELAY: begin
+                rwi = 'b00;
+                state_n = DATA;
+            end
+            LOAD_DELAY: begin
+                rwi = 'b00;
+                state_n = DATA;
+            end
             default: begin    
                 freeze_o = 1;
                 addrControl = 0; //check this
