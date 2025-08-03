@@ -55,21 +55,11 @@ module t07_memoryHandler (
         end else begin
             state <= state_n;
             load_ct <= load_ct_n;
+            regData_o <= regData_o_n;
         end
     end
 
     always_comb begin
-    //default to prevent latch
-        // freeze_o = '0;
-        // addrControl = 0; //check this
-        // rwi = 'b11; //check this - default to fetch correct?
-        // regData_o = 'hDEADBEEF;
-        // addrMMIO_o = 'hDEADBEEF; 
-        // dataMMIO_o = 'hDEADBEEF;
-        
-        // load_ct_n = '0;
-        // state_n = FETCH; 
-
         case(state) 
             FETCH: //state 0
                 begin
@@ -96,7 +86,7 @@ module t07_memoryHandler (
                         state_n = F_WAIT; 
                     end 
 
-                    regData_o = dataMMIO_i;
+                    regData_o_n = regData_o;
                     addrMMIO_o = 'hDEADBEEF; 
                     dataMMIO_o = 'hDEADBEEF;
                 end
@@ -109,7 +99,7 @@ module t07_memoryHandler (
                         rwi = 'b01; 
                         // freeze_o = 1; 
                         load_ct_n = load_ct;
-                        regData_o = 32'b0; 
+                        regData_o_n = regData_o; 
                         addrMMIO_o = '0;
 
                         if(memSource) begin
@@ -156,24 +146,24 @@ module t07_memoryHandler (
                         dataMMIO_o = 32'b0; // No data to write in read operation
                         
                         if (memOp == 4'd1) begin //load byte
-                            regData_o = {{24{dataMMIO_i[7]}}, dataMMIO_i[7:0]}; 
+                            regData_o_n = {{24{dataMMIO_i[7]}}, dataMMIO_i[7:0]}; 
                         end else if (memOp == 4'd2) begin // load half word
-                            regData_o = {{16{dataMMIO_i[15]}}, dataMMIO_i[15:0]}; 
+                            regData_o_n = {{16{dataMMIO_i[15]}}, dataMMIO_i[15:0]}; 
                         end else if (memOp == 4'd3) begin // load word
-                            regData_o = dataMMIO_i; 
+                            regData_o_n = dataMMIO_i; 
                         end else if (memOp == 4'd4) begin // load byte unsigned
-                            regData_o = {24'b0, dataMMIO_i[7:0]}; 
+                            regData_o_n = {24'b0, dataMMIO_i[7:0]}; 
                         end else if (memOp == 4'd5) begin // load half word unisgned
-                            regData_o = {16'b0, dataMMIO_i[15:0]};
+                            regData_o_n = {16'b0, dataMMIO_i[15:0]};
                         end else begin
-                            regData_o = 32'b0; 
+                            regData_o_n = 32'b0; 
                         end
 
                     end else begin
                         state_n = FETCH;
                         dataMMIO_o = 32'b0; 
                         addrMMIO_o = ALU_address; 
-                        regData_o = 32'b0;
+                        regData_o_n = regData_o;
 
                         freeze_o = '1;
                         addrControl = 0; 
@@ -202,21 +192,19 @@ module t07_memoryHandler (
                         rwi = 'b10; //check
                     end 
 
-                    regData_o = dataMMIO_i;
+                    regData_o_n = dataMMIO_i;
                     addrMMIO_o = ALU_address; 
                     dataMMIO_o = regData_i;
                 end
             DELAY: //state 4, wait for load instruction
                 begin
-                    if(busy_o_edge) begin
-                        state_n = FETCH;
-                    end else begin state_n = DELAY; end
+                    state_n = FETCH;
                 end
             default: begin    
                 freeze_o = 1;
                 addrControl = 0; //check this
                 rwi = 'b11; //check this - default to fetch correct?
-                regData_o = 'hDEADBEEF;
+                regData_o_n= 'hDEADBEEF;
                 addrMMIO_o = 'hDEADBEEF; 
                 dataMMIO_o = 'hDEADBEEF;
                 load_ct_n = '0;
