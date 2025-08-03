@@ -3,7 +3,8 @@
         FETCH = 0,
         F_WAIT = 1,
         DATA = 2,
-        D_WAIT = 3
+        D_WAIT = 3,
+        DELAY = 4
     } state_t0;
 
 
@@ -31,8 +32,9 @@ module t07_memoryHandler (
 
 );
     //edge detector
-    logic load_ct, load_ct_n;
+    logic [1:0] load_ct, load_ct_n;
     logic prev_busy_o;
+    logic [31:0] regData_o_n;
     state_t0 state_n;
 
 
@@ -58,24 +60,29 @@ module t07_memoryHandler (
 
     always_comb begin
     //default to prevent latch
-        freeze_o = '0;
-        addrControl = 0; //check this
-        rwi = 'b11; //check this - default to fetch correct?
-        regData_o = 'hDEADBEEF;
-        addrMMIO_o = 'hDEADBEEF; 
-        dataMMIO_o = 'hDEADBEEF;
+        // freeze_o = '0;
+        // addrControl = 0; //check this
+        // rwi = 'b11; //check this - default to fetch correct?
+        // regData_o = 'hDEADBEEF;
+        // addrMMIO_o = 'hDEADBEEF; 
+        // dataMMIO_o = 'hDEADBEEF;
         
-        load_ct_n = '0;
-        state_n = FETCH; 
+        // load_ct_n = '0;
+        // state_n = FETCH; 
 
         case(state) 
             FETCH: //state 0
                 begin
                     addrControl = 1;
-                    load_ct_n  = '0; 
                     rwi = 'b11; 
                     freeze_o = 0; //fetch instr 
                     state_n = F_WAIT; 
+
+                    //default/error settings
+                    regData_o_n = regData_o;
+                    addrMMIO_o = 'hDEADBEEF; 
+                    dataMMIO_o = 'hDEADBEEF;
+                    load_ct_n = '0;
                 end
             F_WAIT: //state 1
                 begin 
@@ -88,6 +95,10 @@ module t07_memoryHandler (
                     end else begin
                         state_n = F_WAIT; 
                     end 
+
+                    regData_o = dataMMIO_i;
+                    addrMMIO_o = 'hDEADBEEF; 
+                    dataMMIO_o = 'hDEADBEEF;
                 end
             DATA: //state 2
                 begin 
@@ -96,38 +107,48 @@ module t07_memoryHandler (
                         addrControl = 0;
                         state_n = D_WAIT; 
                         rwi = 'b01; 
-                        freeze_o = 1; 
-                        load_ct_n = 0;
+                        // freeze_o = 1; 
+                        load_ct_n = load_ct;
                         regData_o = 32'b0; 
+                        addrMMIO_o = '0;
 
                         if(memSource) begin
-                            addrMMIO_o = ALU_address; 
+                            freeze_o = 1;
+                            //addrMMIO_o = ALU_address; 
                             if (memOp == 4'd6) begin // store byte - FPU
                                 dataMMIO_o = {24'b0, FPU_data_i[7:0]}; 
+                                addrMMIO_o = ALU_address; 
                             end else if (memOp == 4'd7) begin // store half-word - FPU
                                 dataMMIO_o = {16'b0, FPU_data_i[15:0]}; 
+                                addrMMIO_o = ALU_address; 
                             end else if (memOp == 4'd8) begin // store word - FPU
                                 dataMMIO_o = FPU_data_i; 
+                                addrMMIO_o = ALU_address; 
                             end else begin
                                 dataMMIO_o = 32'b0; // Default case, no valid operation
+                                addrMMIO_o = ALU_address; 
                             end
                         end else begin
-                            addrMMIO_o = ALU_address; // Use ALU address for memory operations
+                            //addrMMIO_o = ALU_address; // Use ALU address for memory operations
+                            freeze_o = 1;
                             if (memOp == 4'd6) begin // store byte
                                 dataMMIO_o = {24'b0, regData_i[7:0]}; 
+                                addrMMIO_o = ALU_address;
                             end else if (memOp == 4'd7) begin // store half-word
                                 dataMMIO_o = {16'b0, regData_i[15:0]}; 
+                                addrMMIO_o = ALU_address;
                             end else if (memOp == 4'd8) begin // store word
                                 dataMMIO_o = regData_i; 
+                                addrMMIO_o = ALU_address;
                             end else begin
                                 dataMMIO_o = 32'b0; // Default case, no valid operation
+                                addrMMIO_o = ALU_address;
                             end 
                         end 
-
                     end else if (memRead == 1) begin //LOAD
-                        addrControl = 0;//
+                        addrControl = 0;
                         state_n = D_WAIT; 
-                        load_ct_n = load_ct + 1; 
+                        load_ct_n = load_ct + 'd1; 
                         rwi = 'b10; 
                         freeze_o = 1; 
 
@@ -153,24 +174,55 @@ module t07_memoryHandler (
                         dataMMIO_o = 32'b0; 
                         addrMMIO_o = ALU_address; 
                         regData_o = 32'b0;
+
+                        freeze_o = '1;
+                        addrControl = 0; 
+                        rwi = 'b00; 
+                        load_ct_n = load_ct;
                     end
                 end
             D_WAIT: //state 3
                 begin 
                     addrControl = 0;
                     freeze_o = 1;
-                    if(busy_o_edge & load_ct == 0) begin //check that load_ct is correct and not load_count_n
-                        //addrControl = 1;
+                    load_ct_n = load_ct;
+                    
+                    if(busy_o_edge & load_ct == '0) begin //check that load_ct is correct and not load_count_n
+                        load_ct_n = load_ct;
                         state_n = FETCH; 
-                    end else if (busy_o_edge & load_ct == 1) begin 
+                        rwi = 'b01;
+                    end else if (busy_o_edge & load_ct == 'd1) begin 
                         state_n = DATA; 
+                        rwi = 'b10;
+                    end else if (busy_o_edge & load_ct == 'd2) begin
+                        state_n = DELAY;
+                        rwi = 'b10;
                     end else if (busy_o_edge) begin
-                        //addrControl = 1;
                         state_n = FETCH;
-                    end
+                        rwi = 'b10; //check
+                    end 
+
+                    regData_o = dataMMIO_i;
+                    addrMMIO_o = ALU_address; 
+                    dataMMIO_o = regData_i;
                 end
-            default:
-            freeze_o = 1;
+            DELAY: //state 4, wait for load instruction
+                begin
+                    if(busy_o_edge) begin
+                        state_n = FETCH;
+                    end else begin state_n = DELAY; end
+                end
+            default: begin    
+                freeze_o = 1;
+                addrControl = 0; //check this
+                rwi = 'b11; //check this - default to fetch correct?
+                regData_o = 'hDEADBEEF;
+                addrMMIO_o = 'hDEADBEEF; 
+                dataMMIO_o = 'hDEADBEEF;
+                load_ct_n = '0;
+                state_n = FETCH; 
+            end
+
         endcase
     end
 
