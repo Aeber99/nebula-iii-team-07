@@ -20,6 +20,7 @@ module t07_memoryHandler (
     input logic [31:0] FPU_data_i,    // Data from the FPU register to store in memory
     input logic [31:0] regData_i, // Data from the internal register file to store in memory
     input logic [31:0] dataMMIO_i,     // Data from external memory to read/write
+    input logic [31:0] instr_i, pc_i, //inputs for fetch cycle
     
     //outputs
     output logic [31:0] dataMMIO_o, // Data to write to external memory
@@ -29,16 +30,29 @@ module t07_memoryHandler (
     output logic [1:0] rwi,          // read - 01, write - 10, idle - 00, fetch -11 
     output state_t0 state,
     output logic addrControl, // control for address mux, 0 when fetch, 1 when l/s
-    output logic busy_o_edge
+    output logic busy_o_edge,
+
+    //fetch cycle outputs
+    output logic [31:0] instructionOut, pcOut
 
 );
 
-    //edge detector
     logic prev_busy_o;
-    logic [31:0] regData_o_n;
+    logic [31:0] regData_o_n, instr_n, pc_n;
     state_t0 state_n;
 
+    //instruction fetching
+    // always_ff @(negedge nrst, posedge clk) begin
+    //     if (~nrst) begin
+    //         instructionOut <= 32'b0; // Reset instruction to zero on reset
+    //         pcOut <= 32'b0; // Reset program counter output to zero
+    //     end if (busy_o_edge == 1 & instructionOut != 'hDEADBEEF) begin
+    //         instructionOut <= instr_i; // Fetch instruction from external memory when not frozen
+    //         pcOut <= pc_i; // Update program counter output
+    //     end
+    // end
 
+    //edge detector
     always_ff @(negedge nrst, posedge clk) begin
         if(~nrst) begin
             prev_busy_o <= '0;
@@ -53,18 +67,26 @@ module t07_memoryHandler (
         if (~nrst) begin 
             state <= INC;
             regData_o <= '0;
+            instructionOut <= 32'b0; 
+            pcOut <= 32'b0; 
         end else begin
             state <= state_n;
             regData_o <= regData_o_n;
+            instructionOut <= instr_n; 
+            pcOut <= pc_n; 
         end
     end
 
+    //state machine
     always_comb begin
         case(state)
             INC: //state 0 - 1 cycle
                 begin
                     freeze_o = 0; //only state where pc can increment
                     
+                    pc_n = pc_i;
+                    instr_n = instr_i;
+
                     addrControl = 1;
                     rwi = 'b11;
 
@@ -80,6 +102,9 @@ module t07_memoryHandler (
 
                     addrControl = 1;
                     rwi = 'b11;
+
+                    pc_n = pcOut;
+                    instr_n = instructionOut;
 
                     regData_o_n = regData_o;
                     addrMMIO_o = 'hDEADBEEF;
@@ -98,6 +123,9 @@ module t07_memoryHandler (
                     addrControl = 1;
                     rwi = 'b11;
 
+                    pc_n = pcOut;
+                    instr_n = instructionOut;
+
                     regData_o_n = regData_o;
                     addrMMIO_o = 'hDEADBEEF;
                     dataMMIO_o = 'hDEADBEEF;
@@ -109,6 +137,9 @@ module t07_memoryHandler (
                     addrControl = 1;
                     freeze_o = 1;
                     rwi = '0;
+
+                    pc_n = pcOut;
+                    instr_n = instructionOut;
                     
                     regData_o_n = regData_o; //ALU result does into reg via muxWD
                     addrMMIO_o = 'hDEADBEEF;
@@ -130,6 +161,9 @@ module t07_memoryHandler (
 
                     addrMMIO_o = ALU_address; 
                     dataMMIO_o = 32'b0; 
+
+                    pc_n = pcOut;
+                    instr_n = instructionOut;
                         
                     if (memOp == 4'd1) begin //load byte
                         regData_o_n = {{24{dataMMIO_i[7]}}, dataMMIO_i[7:0]}; 
@@ -157,6 +191,9 @@ module t07_memoryHandler (
                     addrControl = 0;
                     rwi = 'b10;
 
+                    pc_n = pcOut;
+                    instr_n = instructionOut;
+
                     addrMMIO_o = ALU_address; 
                     dataMMIO_o = 32'b0; 
                     regData_o_n = regData_o;
@@ -171,6 +208,9 @@ module t07_memoryHandler (
 
                     addrMMIO_o = ALU_address; 
                     regData_o_n = regData_o; 
+
+                    pc_n = pcOut;
+                    instr_n = instructionOut;
 
                     if(memSource) begin //memSrc determines if data is from FPU reg or normal reg
                     //FPU registers
@@ -194,6 +234,12 @@ module t07_memoryHandler (
                         end else begin
                             dataMMIO_o = 32'b0; // Default case, no valid operation
                         end 
+                    end
+
+                    if(busy_o_edge) begin
+                        state_n = INC;
+                    end else begin
+                        state_n = STORE;
                     end
                 end
         endcase
