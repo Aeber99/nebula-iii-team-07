@@ -6,7 +6,8 @@
         DATA = 3,
         LOAD = 4,
         LOAD_WAIT = 5,
-        STORE = 6
+        STORE = 6,
+        PRELOAD = 7
     } state_t0;
 
 module t07_memoryHandler (
@@ -84,8 +85,9 @@ module t07_memoryHandler (
                 begin
                     freeze_o = 0; //only state where pc can increment
                     
+
                     pc_n = pc_i;
-                    instr_n = instr_i;
+                    instr_n = instructionOut;
 
                     addrControl = 1;
                     rwi = 'b11;
@@ -103,8 +105,8 @@ module t07_memoryHandler (
                     addrControl = 1;
                     rwi = 'b11;
 
-                    pc_n = pcOut;
                     instr_n = instructionOut;
+                    pc_n = pcOut;
 
                     regData_o_n = regData_o;
                     addrMMIO_o = 'hDEADBEEF;
@@ -124,7 +126,10 @@ module t07_memoryHandler (
                     rwi = 'b11;
 
                     pc_n = pcOut;
-                    instr_n = instructionOut;
+
+                    if(instr_i != 'hDEADBEEF) begin
+                        instr_n = instr_i;
+                    end
 
                     regData_o_n = regData_o;
                     addrMMIO_o = 'hDEADBEEF;
@@ -180,12 +185,27 @@ module t07_memoryHandler (
                     end
 
                     if(busy_o_edge) begin
-                        state_n = LOAD_WAIT;
+                        state_n = PRELOAD;
                     end else begin
                         state_n = LOAD;
                     end
                 end
-            LOAD_WAIT: 
+            PRELOAD:
+                begin
+                    freeze_o = 1;
+                    addrControl = 0;
+                    rwi = 'b10;
+
+                    addrMMIO_o = ALU_address; 
+                    dataMMIO_o = 32'b0; 
+                    regData_o_n = regData_o;
+
+                    pc_n = pcOut;
+                    instr_n = instructionOut;
+
+                    state_n = LOAD_WAIT;
+                end
+            LOAD_WAIT: //state 5
                 begin
                     freeze_o = 1;
                     addrControl = 0;
@@ -198,9 +218,14 @@ module t07_memoryHandler (
                     dataMMIO_o = 32'b0; 
                     regData_o_n = regData_o;
 
-                    state_n = INC; 
+                    //state_n = INC;
+                    if(busy_o_edge) begin
+                        state_n = INC;
+                    end else begin
+                        state_n = LOAD_WAIT;
+                    end 
                 end
-            STORE:
+            STORE: //state 6
                 begin
                     freeze_o = 1;
                     addrControl = 0;
