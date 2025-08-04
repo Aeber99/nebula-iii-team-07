@@ -1,5 +1,5 @@
 
- typedef enum logic [2:0] {  
+ typedef enum logic [3:0] {  
         INC = 0,
         FETCH = 1,
         F_WAIT = 2,
@@ -7,7 +7,8 @@
         LOAD = 4,
         LOAD_WAIT = 5,
         STORE = 6,
-        PRELOAD = 7
+        PRELOAD = 7,
+        INC_WAIT = 8
     } state_t0;
 
 module t07_memoryHandler (
@@ -26,6 +27,7 @@ module t07_memoryHandler (
     //outputs
     output logic [31:0] dataMMIO_o, // Data to write to external memory
     output logic [31:0] addrMMIO_o, // Address to write to external memory   
+    output logic [31:0] addrMMIO_comb_o,
     output logic [31:0] regData_o,  // Data to the register
     output logic freeze_o,            // Freeze signal to pause CPU operations during memory access
     output logic [1:0] rwi,          // read - 01, write - 10, idle - 00, fetch -11 
@@ -39,10 +41,11 @@ module t07_memoryHandler (
 );
 
     logic prev_busy_o;
-    logic [31:0] regData_o_n, instr_n, pc_n;
-    logic [1:0] loadCt, loadCt_n; //preload state
+    logic [31:0] regData_o_n, instr_n, pc_n, addrMMIO_o_n;
+    logic [2:0] loadCt, loadCt_n; //preload state
     logic [1:0] load2Ct, load2Ct_n; //load state
-    logic [1:0] load3Ct, load3Ct_n; //load wait count
+    logic [2:0] load3Ct, load3Ct_n; //load wait count
+    logic [2:0] storeCt, storeCt_n; //store count
     state_t0 state_n;
 
 
@@ -72,22 +75,27 @@ module t07_memoryHandler (
         if (~nrst) begin 
             state <= FETCH;
             regData_o <= '0;
+            addrMMIO_o <= '0;
             instructionOut <= 32'b0; 
-            pcOut <= 32'b0; 
+            // pcOut <= 32'b0; 
             loadCt <= '0;
             load2Ct <= '0;
             load3Ct <= '0;
+            storeCt <= '0;
         end else begin
             state <= state_n;
             regData_o <= regData_o_n;
+            addrMMIO_o <= addrMMIO_o_n;
             instructionOut <= instr_n; 
-            pcOut <= pc_n; 
+            // pcOut <= pc_n; 
             loadCt <= loadCt_n;
             load2Ct <= load2Ct_n;
             load3Ct <= load3Ct_n; 
+            storeCt <= storeCt_n;
         end
     end
 
+    assign pcOut = pc_i;
     //state machine
     always_comb begin
         case(state)
@@ -100,17 +108,19 @@ module t07_memoryHandler (
                     instr_n = instructionOut;
 
                     addrControl = 1;
-                    rwi = 'b11;
+                    rwi = 'b00;
 
                     loadCt_n = '0;
                     load2Ct_n = '0;
                     load3Ct_n = '0;
+                    storeCt_n = '0;
 
                     regData_o_n = regData_o;
-                    addrMMIO_o = 'hDEADBEEF;
+                    addrMMIO_o_n = addrMMIO_o;
                     dataMMIO_o = 'hDEADBEEF;
+                    addrMMIO_comb_o = '0;
 
-                    state_n = FETCH;
+                    state_n = INC_WAIT;
                 end
             FETCH: //state 1 - busy edge 
                 begin
@@ -122,13 +132,15 @@ module t07_memoryHandler (
                     loadCt_n = '0;
                     load2Ct_n = '0;
                     load3Ct_n = '0;
+                    storeCt_n = '0;
 
                     instr_n = instructionOut;
                     pc_n = pc_i;
 
                     regData_o_n = regData_o;
-                    addrMMIO_o = 'hDEADBEEF;
+                    addrMMIO_o_n = addrMMIO_o;
                     dataMMIO_o = 'hDEADBEEF;
+                    addrMMIO_comb_o = '0;
 
                     if(busy_o_edge) begin
                         state_n = F_WAIT;
@@ -141,11 +153,12 @@ module t07_memoryHandler (
                     freeze_o = 1;
 
                     addrControl = 1;
-                    rwi = 'b11;
+                    rwi = 'b00;
 
                     loadCt_n = '0;
                     load2Ct_n = '0;
                     load3Ct_n = '0;
+                    storeCt_n = '0;
 
                     pc_n = pcOut;
 
@@ -154,8 +167,9 @@ module t07_memoryHandler (
                     end
 
                     regData_o_n = regData_o;
-                    addrMMIO_o = 'hDEADBEEF;
+                    addrMMIO_o_n = addrMMIO_o;
                     dataMMIO_o = 'hDEADBEEF;
+                    addrMMIO_comb_o = '0;
 
                     state_n = DATA;
                 end
@@ -168,13 +182,15 @@ module t07_memoryHandler (
                     loadCt_n = '0;
                     load2Ct_n = '0;
                     load3Ct_n = '0;
+                    storeCt_n = '0;
 
                     pc_n = pcOut;
                     instr_n = instructionOut;
                     
                     regData_o_n = regData_o; //ALU result does into reg via muxWD
-                    addrMMIO_o = 'hDEADBEEF;
+                    addrMMIO_o_n = addrMMIO_o;
                     dataMMIO_o = 'hDEADBEEF;
+                    addrMMIO_comb_o = '0;
 
                     if(memWrite) begin 
                         state_n = STORE;
@@ -193,8 +209,10 @@ module t07_memoryHandler (
                     loadCt_n = '0;
                     load2Ct_n = load2Ct + 'b1;
                     load3Ct_n = '0;
+                    storeCt_n = '0;
 
-                    addrMMIO_o = ALU_address; 
+                    addrMMIO_o_n = ALU_address; 
+                    addrMMIO_comb_o = ALU_address;
                     dataMMIO_o = 32'b0; 
 
                     pc_n = pcOut;
@@ -228,15 +246,17 @@ module t07_memoryHandler (
                 end
             PRELOAD:
                 begin
-                    loadCt_n = loadCt + '1;
+                    loadCt_n = loadCt + 'd1;
                     load2Ct_n = '0;
                     load3Ct_n = '0;
+                    storeCt_n = '0;
 
                     freeze_o = 1;
                     addrControl = 0;
                     rwi = 'b10;
 
-                    addrMMIO_o = ALU_address; 
+                    addrMMIO_o_n = ALU_address; 
+                    addrMMIO_comb_o = ALU_address;
                     dataMMIO_o = 32'b0; 
                     regData_o_n = regData_o;
 
@@ -258,15 +278,17 @@ module t07_memoryHandler (
                     loadCt_n = '0;
                     load2Ct_n = '0;
                     load3Ct_n = load3Ct + 'b1;
+                    storeCt_n = '0;
 
                     pc_n = pcOut;
                     instr_n = instructionOut;
 
-                    addrMMIO_o = ALU_address; 
+                    addrMMIO_o_n = ALU_address; 
+                    addrMMIO_comb_o = ALU_address;
                     dataMMIO_o = 32'b0; 
                     regData_o_n = regData_o;
 
-                    if(load3Ct == 2) begin
+                    if(busy_o_edge) begin
                         state_n = INC;
                     end else begin
                         state_n = LOAD_WAIT;
@@ -288,8 +310,11 @@ module t07_memoryHandler (
                     loadCt_n = '0;
                     load2Ct_n = '0;
                     load3Ct_n = '0;
+                    //storeCt_n = storeCt + 1;
 
-                    addrMMIO_o = ALU_address; 
+
+                    addrMMIO_o_n = ALU_address; 
+                    addrMMIO_comb_o = ALU_address;
                     regData_o_n = regData_o; 
 
                     pc_n = pcOut;
@@ -320,11 +345,38 @@ module t07_memoryHandler (
                     end
 
                     if(busy_o_edge) begin
-                        state_n = INC;
+                        storeCt_n = storeCt + 1;
+                    end else begin storeCt_n = storeCt; end
+
+                    if(storeCt > '0) begin
+                        if(busy_o_edge) begin
+                            state_n = INC;
+                        end else begin state_n = STORE; end
                     end else begin
                         state_n = STORE;
                     end
                 end
+            INC_WAIT: begin
+                    freeze_o = 1;
+
+                    pc_n = pcOut;
+                    instr_n = instructionOut;
+
+                    addrControl = 1;
+                    rwi = 'b00;
+
+                    loadCt_n = '0;
+                    load2Ct_n = '0;
+                    load3Ct_n = '0;
+                    storeCt_n = '0;
+
+                    regData_o_n = regData_o;
+                    addrMMIO_o_n = addrMMIO_o;
+                    dataMMIO_o = 'hDEADBEEF;
+                    addrMMIO_comb_o = '0;
+
+                    state_n = FETCH;
+            end
         endcase
     end
 endmodule

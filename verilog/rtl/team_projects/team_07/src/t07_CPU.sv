@@ -44,7 +44,8 @@ module t07_CPU(
     logic addrControl;
     logic [31:0] pcData_out;
     logic freezeToReg;
-    
+    logic [31:0] addrComb; //for addr mux
+
     //t07_fetch fetch_inst(.busy_o_edge(busy_edge_o), .clk(clk), .nrst(nrst), .ExtInstruction(exInst), .programCounter(pc_out), .Instruction_out(inst), .PC_out(pcData_out), .busy_o(busy));
     t07_decoder decoder(.instruction(inst), .Op(Op), .funct7(funct7), .funct3(funct3), .rs1(rs1), .rs2(rs2), .rd(rd));
 
@@ -61,7 +62,7 @@ module t07_CPU(
     .reg_write(regWrite), .enable(regEnable), .read_data1(dataRead1), .read_data2(dataRead2));
 
     t07_memoryHandler internalMem(.instr_i(exInst), .pc_i(pc_out), .instructionOut(inst), .pcOut(pcData_out), .freeze_o(freezeToReg), .state(state), .clk(clk), .nrst(nrst), .busy(busy), .memOp(memOp), .memWrite(memWrite), .memRead(memRead), .memSource(memSource), .ALU_address(ALUResult), 
-    .FPU_data_i('0), .regData_i(dataRead2), .dataMMIO_i(memData_in), .dataMMIO_o(exMemData_out), .addrMMIO_o(intMemAddr), .regData_o(intMem_out), 
+    .FPU_data_i('0), .regData_i(dataRead2), .dataMMIO_i(memData_in), .dataMMIO_o(exMemData_out), .addrMMIO_o(intMemAddr), .regData_o(intMem_out), .addrMMIO_comb_o(addrComb), 
      .rwi(rwi), .addrControl(addrControl), .busy_o_edge(busy_edge_o));
 
     t07_ALU ALU(.valA(dataRead1), .valB(ALU_in2), .result(ALUResult), .ALUflags(ALUFlags), .ALUOp(ALUOp));
@@ -74,7 +75,8 @@ module t07_CPU(
     t07_MuxWD toReg(.control_in(regWriteSrc), .ALUResult(ALUResult), .PCResult(pc_out), .FPUResult(FPUResult),
     .memResult(intMem_out), .immResult(immediate), .writeData(regData_in));
     
-    t07_muxes addrMux(.a(intMemAddr), .b(pcData_out), .sel(addrControl), .out(externalMemAddr));
+    t07_muxAddr muxAddr(.memAddr_i(intMemAddr), .memAddr_comb_i(addrComb), .pc_i(pcData_out), .control(addrControl), .clk(clk), .nrst(nrst), .addr_o(externalMemAddr));
+   //t07_muxes addrMux(.a(intMemAddr), .b(pcData_out), .sel(addrControl), .out(externalMemAddr));
 
     // t07_FPU FPUmanager(.clk(clk), .nrst(nrst), .valA(), .valB(), .valC(), .fcsr_in(), .FPUOp(FPUOp), .result(FPUResult), 
     // .FPUflags(FPUFlags), .overflowFlag(FPU_overflowFlag), .carryout(FPUcarryout), .busy(FPUbusy_o));
