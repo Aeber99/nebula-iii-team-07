@@ -65,7 +65,7 @@ module t07_CPU(
     .reg_write(regWrite), .enable(regEnable), .read_data1(dataRead1), .read_data2(dataRead2));
 
     t07_memoryHandler internalMem(.instr_i(exInst), .pc_i(pc_out), .instructionOut(inst), .pcOut(pcData_out), .freeze_o(freezeToReg), .state(state), .clk(clk), .nrst(nrst), 
-    .busy(busy), .memOp(memOp), .memWrite(memWrite), .memRead(memRead), .memSource(memSource), .ALU_address(ALUResult), .FPU_data_i('0), .regData_i(dataRead2), .dataMMIO_i(memData_in), 
+    .busy(busy), .memOp(memOp), .memWrite(memWrite), .memRead(memRead), .memSource(memSource), .ALU_address(ALUResult), .FPU_data_i(FPUResult), .regData_i(dataRead2), .dataMMIO_i(memData_in), 
     .dataMMIO_o(exMemData_out), .addrMMIO_o(intMemAddr), .regData_o(intMem_out), .addrMMIO_comb_o(addrComb), 
     .rwi(rwi), .addrControl(addrControl), .busy_o_edge(busy_edge_o));
 
@@ -90,6 +90,6 @@ module t07_CPU(
     t07_FPU FPUmanager(.clk(clk), .nrst(nrst), .valA(FPUValA_i), .valB(FPUValB_i), .valC(FPUValC_i), .fcsr_in(FPUfcsr_i), .FPUOp(FPUOp), .result(FPUResult), 
     .FPUflags(FPUFlags), .overflowFlag(FPU_overflowFlag), .carryout(FPUcarryout), .busy(FPUbusy_o));
 
-    t07_fp_fcsr fcsr(.clk(clk), .nrst(nrst), .frm(), .fflags(), .rwSignal(), .fcsr_out(FPUfcsr_i));
+    t07_fp_fcsr fcsr(.clk(clk), .nrst(nrst), .frm(FPURnd), .fflags(FPUFlags), .rwSignal(FPUWrite), .fcsr_out(FPUfcsr_i));
 
 endmodule
