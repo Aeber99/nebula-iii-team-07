@@ -27,4 +27,5 @@
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_FPU_mult.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_FPU_div.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_quadSPI.sv
+-v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_muxAddr.sv
 
