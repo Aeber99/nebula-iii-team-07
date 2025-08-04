@@ -5,7 +5,6 @@
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_program_counter.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_memoryHandler.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_muxes.sv
--v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_ExternalRegister.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_control_unit.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_decoder.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_muxForPC.sv
@@ -27,5 +26,5 @@
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_spitft.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_FPU_mult.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_FPU_div.sv
-
+-v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_quadSPI.sv
 

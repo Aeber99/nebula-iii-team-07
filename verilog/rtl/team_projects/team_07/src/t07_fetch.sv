@@ -11,8 +11,6 @@ module t07_fetch (
 
 );
 
-logic [31:0] n_ExtInstruction, n_PC_out; // Next instruction to fetch
-
 always_ff @(negedge nrst, posedge clk) begin
     if (~nrst) begin
         Instruction_out <= 32'b0; // Reset instruction to zero on reset

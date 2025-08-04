@@ -53,18 +53,11 @@ logic [(32 * (10)) - 1:0] dataDec_in; //data from SRAM to WB Dec
 
 //inputs to MMIO from SPI -ESP32
 logic [31:0] SPIData_i;
+logic espSPI_en;
 
 //outputs to SPI->TFT
 logic [31:0] dataToTFT, addrToTFT;
 logic displayWrite, busyTFT_o;
-
-//logic [4:0] ESP_in; // Input from the ESP32
-logic SCLK_out; // Clock signal for the ESP32
-logic ChipSelectOut, ackReg, ChipSelectIn, regRead;
-logic [4:0] SPIAddress, addrToReg;
-logic [31:0] write_data;
-logic [31:0] regData_in;
-logic wi_out, espSPI_en;
 
 
 t07_CPU CPU(.busy(busyCPU), .externalMemAddr(exMemAddr_CPU), .exMemData_out(exMemData_CPU), .exInst(instr), .memData_in(memData_in), 
@@ -95,6 +88,6 @@ sram_WB_Wrapper sramWrapper(.wb_clk_i(clk), .wb_rst_i(nrst), .wbs_stb_i(stb_out)
 
 t07_spitft display(.data(dataToTFT), .address(addrToTFT), .clk(clk), .nrst(nrst), .wi(displayWrite), .busy_o(busyTFT_o), .chipSelect(chipSelectTFT), .bitData(bitDataTFT), .sclk(sclkTFT));
 
-t07_quadSPI espSPI(.ESPData_i(ESP_in), .sclk_i(clk), .nrst(nrst), .enable_i(), .MMIOData_o(), .sclk_o(), .enable_o(espSPI_en), .ack_o());
+//t07_quadSPI espSPI(.ESPData_i(ESP_in), .sclk_i(clk), .nrst(nrst), .enable_i(), .MMIOData_o(), .sclk_o(), .enable_o(espSPI_en), .ack_o());
 
 endmodule

@@ -14,7 +14,7 @@ module t07_MuxWD (
             writeData = FPUResult;
         end else if (control_in == 3'b100) begin
             writeData = immResult;
-        end
+        end else begin writeData = 'hDEADBEEF; end //error case
     end
 
 endmodule

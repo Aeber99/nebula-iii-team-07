@@ -1,6 +1,6 @@
  typedef enum logic [1:0] {  
         IDLE = 0,
-        LOAD = 1,
+        LOAD_D = 1,
         OUTPUT = 2
     } state_tft;
 
@@ -53,9 +53,9 @@ always_comb begin
         IDLE: begin 
             busy_o_n = '0;
             if(wi == '0) begin next_state = IDLE; end 
-            else begin next_state = LOAD; end
+            else begin next_state = LOAD_D; end
             end
-        LOAD: begin 
+        LOAD_D: begin 
             if(wi == 1) begin 
                 next_ctr = 7'b0; 
                 chipSelect = 0; 
