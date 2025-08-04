@@ -10,7 +10,7 @@
     } state_t0;
 
 
-module t07_memoryHandler (
+module t07_memoryHandler_old (
 
     // Inputs
     input logic clk, nrst, busy, // Busy signal to indicate if the memory handler is currently processing
