@@ -1,32 +1,36 @@
 // spi to tft testbench
 
-`timescale 1ns / 1ps
+`timescale 1ms / 10ns
 
 module t07_spitft_tb;
 
 //inputs
-logic [31:0] data;
-logic [31:0] address;
+logic [15:0] in;
 logic clk, nrst;
 logic wi;
+logic delay;
+logic miso_in;
+
 //outputs
 logic ack;
 logic bitData;
 logic sclk;
 logic chipSelect;
-logic [31:0] expected;
+logic [7:0] miso_out;
 
 //instantiate the tft
 t07_spitft ex (
     .clk(clk),
     .bitData(bitData),
-    .data(data),
-    .address(address),
+    .in(in),
     .nrst(nrst),
     .wi(wi),
+    .miso_in(miso_in),
+    .miso_out(miso_out),
     .chipSelect(chipSelect),
     .sclk(sclk),
-    .ack(ack)
+    .ack(ack),
+    .delay(delay)
 );
 
 always begin 
@@ -46,19 +50,62 @@ initial begin
     // nrst = 0;
     // wi = 0;
     // #40;
+    delay = 1'b0;
 
+    #5
     nrst = 1;  // Deassert reset
-    #2;
+    #5;
     nrst = 0;
-    #2;
+    #5;
     nrst = 1;
 
     wi = 1;    // Now trigger transfer
     //expected = 32'hAAAA5555;
-    address = 32'b01111010101111100000000111010101;
-    data    = 32'b10100000101111001010101000111101;
-
-    #1000;
+    in = 16'h801D;
+    miso_in = 1;
+    #400;
+    delay = 1'b1;
+    //miso_in = 1;
+    #50;
+    //miso_in = 1;
+    delay = 1'b0;
+    in = 16'h4000;
+    #20;
+    miso_in = 1;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 0;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 1;
+    #10;
+    miso_in = 0;
+    #10;
+    miso_in = 0;
+    #10;
+    miso_in = 0;
+    #10;
+    miso_in = 0;
+    #40;
+    delay = 1'b1;
+    #100;
+    delay = 1'b0;
 
     $finish;
 end

@@ -1,7 +1,8 @@
 module t07_top (
     input logic clk, nrst,
     input logic [3:0] ESP_in,
-    output logic FPUFlag, invalError, chipSelectTFT, bitDataTFT, sclkTFT, FPU_overflowFlag, FPUcarryout,
+    input logic misoDriver_i, //for SPITFT from RA8875
+    output logic FPUFlag, invalError, chipSelectTFT, bitDataTFT, sclkTFT, FPU_overflowFlag, FPUcarryout, //GPIO
     output logic [6:0] FPUFlags
 );
 
@@ -57,6 +58,7 @@ logic espSPI_en;
 
 //outputs to SPI->TFT
 logic [31:0] dataToTFT, addrToTFT;
+logic [7:0] misoTFT_o;
 logic displayWrite, busyTFT_o;
 
 
@@ -65,8 +67,8 @@ t07_CPU CPU(.busy(busyCPU), .externalMemAddr(exMemAddr_CPU), .exMemData_out(exMe
 .FPUcarryout(FPUcarryout), .FPUFlags(FPUFlags), .FPUbusy_o(FPUbusy_o));
 
 t07_MMIO MMIO(.clk(clk), .nrst(nrst), .SPIack_i(), .addr_in(exMemAddr_CPU), .memData_i(exMemData_CPU), .rwi_in(rwi_in), .WBData_i(dataToMMIO), 
- .busyTFT_i(busyTFT_o), .CPUData_out(memData_in), .CPU_busy_o(busyCPU), .instr_out(instr), .displayData(dataToTFT), .displayWrite(displayWrite), 
- .displayAddr(addrToTFT), .WB_read_o(read), .WB_write_o(write), .addr_out(addrToSRAM), .WBData_out(dataToSRAM), .WB_busy_i(busyToMMIO),
+ .busyTFT_i(busyTFT_o), .dataTFT_i(misoTFT_o), .CPUData_out(memData_in), .CPU_busy_o(busyCPU), .instr_out(instr), .displayData(dataToTFT), .displayWrite(displayWrite), 
+ .WB_read_o(read), .WB_write_o(write), .addr_out(addrToSRAM), .WBData_out(dataToSRAM), .WB_busy_i(busyToMMIO),
  .WB_busy_edge_i(busy_edge), .SPIData_i(SPIData_i), .FPUbusy_i(FPUbusy_o), .espSPI_en(espSPI_en));
 
 wishbone_manager wishbone0(.nRST(nrst), .CLK(clk), .DAT_I(dataArToWM), .ACK_I(ackToWM), .CPU_DAT_I(dataToSRAM), 
@@ -86,7 +88,8 @@ wishbone_decoder wishboneD0 (.CLK(clk), .nRST(nrst), .wbs_ack_i_periph(ackDec_in
 sram_WB_Wrapper sramWrapper(.wb_clk_i(clk), .wb_rst_i(nrst), .wbs_stb_i(stb_out), .wbs_cyc_i(cyc_out), .wbs_we_i(we_out), .wbs_sel_i(sel_out),
 .wbs_dat_i(data_out), .wbs_adr_i(addr_out), .wbs_ack_o(ackDec_in), .wbs_dat_o(dataDec_in));
 
-t07_spitft display(.data(dataToTFT), .address(addrToTFT), .clk(clk), .nrst(nrst), .wi(displayWrite), .busy_o(busyTFT_o), .chipSelect(chipSelectTFT), .bitData(bitDataTFT), .sclk(sclkTFT));
+// t07_spitft display(.in(dataToTFT), .clk(clk), .nrst(nrst), .wi(displayWrite), .miso_in(misoDriver_i), .miso_out(misoTFT_o), .ack(busyTFT_o), 
+// .chipSelect(chipSelectTFT), .bitData(bitDataTFT), .sclk(sclkTFT));
 
 //t07_quadSPI espSPI(.ESPData_i(ESP_in), .sclk_i(clk), .nrst(nrst), .enable_i(), .MMIOData_o(), .sclk_o(), .enable_o(espSPI_en), .ack_o());
 

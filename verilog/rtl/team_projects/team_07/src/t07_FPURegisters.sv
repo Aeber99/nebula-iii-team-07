@@ -1,10 +1,10 @@
 module t07_FPURegisters(
     input logic clk, nrst,
-    input logic [4:0] rs1, rs2, rd,
+    input logic [4:0] rs1, rs2, rs3, rd,
     input logic [31:0] data_i,
     input logic regEnable_i, FPUregWrite_i, 
     input logic freeze_i,
-    output logic [31:0] FPUreg1_o, FPUreg2_o
+    output logic [31:0] FPUreg1_o, FPUreg2_o, FPUreg3_o
 );
 
     logic [31:0] [31:0] registers;
@@ -22,6 +22,7 @@ module t07_FPURegisters(
     always_comb begin
         FPUreg1_o = registers[rs1];
         FPUreg2_o = registers[rs2];
+        FPUreg3_o = registers[rs3];
     end
 
 endmodule

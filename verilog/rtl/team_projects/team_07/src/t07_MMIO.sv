@@ -22,8 +22,8 @@ module t07_MMIO(
 
     //SPI for TFT
     input logic busyTFT_i, 
+    input logic [7:0] dataTFT_i,
     output logic [31:0] displayData, // data to write to SPT TFT
-    output logic [31:0] displayAddr, // address to write to SPI TFT]
     output logic displayWrite, // write or idle to SPI FTF
 
     //SPI for ESP32
@@ -55,7 +55,6 @@ always_comb begin
     addr_out = 'hDEADBEEF;
     WBData_out = 'hDEADBEEF; 
     displayData = 'hDEADBEEF;
-    displayAddr = 'hDEADBEEF;
     displayWrite = '0;
     espSPI_en = '0;
 
@@ -98,9 +97,13 @@ always_comb begin
             WBData_out = memData_i;
         end
     end else if (addr_in > 32'd1792 & addr_in < 32'd2048) begin //SPI-TFT command
-        displayWrite = 1'b1; //write data to SPI TFT
-        displayAddr = addr_in; 
-        displayData = memData_i; 
+        if(rwi_in == 2'b01) begin //store
+            displayWrite = 1'b1; //write data to SPI TFT
+            displayData = memData_i; 
+        end
+        if(rwi_in == 2'b10) begin //load
+            CPUData_out = {24'b0, dataTFT_i};
+        end
     end else if(addr_in > 32'd1024 & addr_in <= 32'd1056 & rwi_in == 2'b10) begin //read from spi
         espSPI_en = '1;
         CPUData_out = SPIregisters;

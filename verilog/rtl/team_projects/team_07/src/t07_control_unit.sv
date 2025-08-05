@@ -26,6 +26,7 @@ always_comb begin
     case(Op) //what should default case be?
         //ALU Cases
         7'b0110011: begin /*(R-type)*/
+            memOp = '0;
             memSrc = 0;
             invalid_Op = 0;
             regWriteSrc = 3'b010; //from ALU
@@ -85,6 +86,7 @@ always_comb begin
         end
 
         7'b0010011: begin /*I-Type*/
+            memOp = '0;
             memSrc = 0;
             invalid_Op = 0;
             regWriteSrc = 'b010;
@@ -114,6 +116,7 @@ always_comb begin
         end
 
         7'b0100011: begin /*(S-Type)*/
+            memOp = '0;
             ALUOp = 4'd0; //ALU add = add rs1 & imm
             memSrc = 0;
             invalid_Op = 0;
@@ -137,6 +140,7 @@ always_comb begin
             if(funct3 == 'b010) begin memOp = 4'd8; end //sw - store word
         end
         7'b1100011: begin /*(B-Type)*/
+            memOp = '0;
             ALUOp = 4'd10; //ALU default
             memSrc = 0;
             invalid_Op = 0;
@@ -156,6 +160,7 @@ always_comb begin
             regEnable_FPU = 0;
         end
         7'b0110111: begin /*(U-type, lui)*/ 
+            memOp = '0;
             ALUOp = 4'd10; //ALU default
             memSrc = 0;
             invalid_Op = 0;
@@ -178,6 +183,7 @@ always_comb begin
             regEnable_FPU = 0;
         end
         7'b0010111: begin /*(U-Type, auipc)*/
+            memOp = '0;
             ALUOp = 4'd00; //ALU addr + imm
             memSrc = 0;
             invalid_Op = 0;
@@ -198,6 +204,7 @@ always_comb begin
             regEnable_FPU = 0;
         end
         7'b1101111: begin /*(J-type, jal)*/
+            memOp = '0;
             ALUOp = 4'd10; //ALU default
             memSrc = 0;
             invalid_Op = 0;
@@ -218,6 +225,7 @@ always_comb begin
             regEnable_FPU = 0;
         end
         7'b1100111: begin /*(J-type, jalr)*/
+            memOp = '0;
             ALUOp = 4'd0; //ALU add rs1 + imm
             memSrc = 0;
             invalid_Op = 0;
@@ -240,6 +248,7 @@ always_comb begin
 
         //FPU Cases
         7'b0000111: begin//(FLW - load word)
+            memOp = '0;
             memWrite = 0;
             memRead = 0;
             ALUSrc = 0;
@@ -254,6 +263,7 @@ always_comb begin
             FPUWrite = 1;
         end 
         7'b0100111: begin //(FSW - store word)
+            memOp = '0;
             memWrite = 0;
             memRead = 0;
             ALUSrc = 0;
@@ -268,6 +278,7 @@ always_comb begin
             FPUWrite = 0; //reading value from register -> goes to internal mem
         end
         7'b1000011: begin //(FMADD.S) rs1 x rs2 + rs3
+            memOp = '0;
             memWrite = 0;
             memRead = 0;
             ALUSrc = 0;
@@ -283,6 +294,7 @@ always_comb begin
 
         end
         7'b1000111: begin //(FMSUB.S) rs1 x rs2 - rs3
+            memOp = '0;
             memWrite = 0;
             memRead = 0;
             ALUSrc = 0;
@@ -297,6 +309,7 @@ always_comb begin
             rs3 = funct7[6:2];
         end
         7'b1001011: begin //(FNMSUB.S) -(rs1 x rs2 - rs3)
+            memOp = '0;
             memWrite = 0;
             memRead = 0;
             ALUSrc = 0;
@@ -311,6 +324,7 @@ always_comb begin
             rs3 = funct7[6:2];
         end 
         7'b1001111: begin //(FNMADD.S) -(rs1 x rs2 + rs3)
+            memOp = '0;
             memWrite = 0;
             memRead = 0;
             ALUSrc = 0;
@@ -325,6 +339,7 @@ always_comb begin
             rs3 = funct7[6:2];
         end
         7'b1010011: begin //Math
+            memOp = '0;
             memWrite = 0;
             memRead = 0;
             ALUSrc = 0;

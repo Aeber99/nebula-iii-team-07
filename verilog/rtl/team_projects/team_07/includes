@@ -29,3 +29,4 @@
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_quadSPI.sv
 -v $(USER_PROJECT_VERILOG)/rtl/team_projects/team_07/src/t07_muxAddr.sv
 
+
